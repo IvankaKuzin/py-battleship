@@ -41,17 +41,20 @@ class Ship:
 
         return deck
 
-    def get_deck(self, row: int, column: int) -> bool:
-        if (
+    def get_deck(self, row: int, column: int) -> tuple[bool, bool]:
+        is_ship_position = (
             self.start[0] <= row <= self.end[0]
             and self.start[1] <= column <= self.end[1]
-        ):
-            return True
-        return False
+        )
+
+        if not is_ship_position:
+            return False, True
+
+        return True, True
 
     def fire(self, row: int, column: int) -> str:
-        deck = self.get_deck(row, column)
-        if not deck:
+        deck_hit, is_alive = self.get_deck(row, column)
+        if not deck_hit or not is_alive:
             return "Miss!"
 
         self.hits += 1
@@ -78,19 +81,7 @@ class Battleship:
         self.field = {}
         self.hits = set()
 
-    def start_game(self) -> Deck:
-        for ship in self.ships:
-            if ship.start[0] == ship.end[0]:
-                for x_coord in range(ship.start[1], ship.end[1] + 1):
-                    self.game_deck[ship.start[0], x_coord] = "□"
-            else:
-                for y_coord in range(ship.start[0], ship.end[0] + 1):
-                    self.game_deck[y_coord, ship.start[1]] = "□"
-
-        return self.game_deck
-
     def fire(self, location: tuple) -> str:
-        print(location)
         row, col = location
 
         if location in self.hits:
@@ -99,7 +90,8 @@ class Battleship:
         self.hits.add(location)
 
         for ship in self.ships:
-            if ship.get_deck(row, col):
+            deck_hit, is_alive = ship.get_deck(row, col)
+            if deck_hit and is_alive:
                 result = ship.fire(row, col)
 
                 if result == "Sunk!":
